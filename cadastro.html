@@ -66,22 +66,11 @@
             <div id="guest-list" class="space-y-2"></div>
         </div>
 
-        <!-- Configurações do GitHub (adicionadas para autenticação e detalhes do repositório) -->
-        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Configurações do GitHub</h2>
-            <div class="space-y-4">
-                <input type="text" id="github-owner-input" placeholder="Nome do proprietário do repositório (ex: seu-usuario)" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
-                <input type="text" id="github-repo-input" placeholder="Nome do repositório (ex: meu-repositorio)" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
-                <input type="password" id="github-token-input" placeholder="Personal Access Token do GitHub" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
-                <input type="text" id="github-path-input" placeholder="Caminho do arquivo (ex: listas/lista_convidados.txt)" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
-            </div>
-        </div>
-
         <!-- Botões de Ação -->
         <div id="validation-message" class="text-center text-red-500 font-bold mb-4"></div>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <button id="share-txt-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg w-full sm:w-auto">
-                Gerar Arquivo no GitHub
+                Finalizar Lista
             </button>
             <input type="file" id="load-txt-input" accept=".txt" class="hidden">
             <button id="load-txt-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg w-full sm:w-auto">
@@ -107,11 +96,8 @@
         const loadTxtInput = document.getElementById('load-txt-input');
         const validationMessage = document.getElementById('validation-message');
 
-        // Novos elementos para GitHub
-        const githubOwnerInput = document.getElementById('github-owner-input');
-        const githubRepoInput = document.getElementById('github-repo-input');
-        const githubTokenInput = document.getElementById('github-token-input');
-        const githubPathInput = document.getElementById('github-path-input');
+        // URL do backend (substitua pelo seu endpoint real, ex: uma função no Vercel, Heroku ou AWS Lambda)
+        const backendUrl = 'https://seu-backend-url.com/api/create-github-file'; // Exemplo: hospede um servidor Node.js
 
         function addGuest() {
             const guestName = guestNameInput.value.trim();
@@ -192,17 +178,7 @@
             const partyGuestCount = guestCountSelect.value.trim();
 
             if (!partyName || !partyAge || !partyDate || !partyGuestCount) {
-                validationMessage.textContent = "Por favor, preencha todos os campos de detalhes da festa antes de gerar o arquivo.";
-                return;
-            }
-
-            const owner = githubOwnerInput.value.trim();
-            const repo = githubRepoInput.value.trim();
-            const token = githubTokenInput.value.trim();
-            const path = githubPathInput.value.trim() || `listas/lista_convidados_${partyName.replace(/ /g, '_')}.txt`;
-
-            if (!owner || !repo || !token || !path) {
-                validationMessage.textContent = "Por favor, preencha todos os campos de configurações do GitHub.";
+                validationMessage.textContent = "Por favor, preencha todos os campos de detalhes da festa antes de finalizar a lista.";
                 return;
             }
 
@@ -217,28 +193,27 @@
                 },
                 guests: guests
             };
-            const jsonString = JSON.stringify(data, null, 2);
-            const base64Content = btoa(unescape(encodeURIComponent(jsonString))); // Codifica para base64 corretamente
+
+            const path = `listas/lista_convidados_${partyName.replace(/ /g, '_')}_${partyDate}.txt`;
 
             try {
-                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                    method: 'PUT',
+                const response = await fetch(backendUrl, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        message: `Adiciona lista de convidados para ${partyName}`,
-                        content: base64Content
+                        path: path,
+                        content: JSON.stringify(data, null, 2),
+                        message: `Adiciona lista de convidados para ${partyName}`
                     })
                 });
 
                 if (response.ok) {
-                    alert('Arquivo gerado com sucesso no repositório do GitHub!');
+                    alert('Lista finalizada e arquivo gerado com sucesso no repositório do GitHub!');
                 } else {
                     const errorData = await response.json();
-                    alert(`Erro ao gerar o arquivo: ${errorData.message || 'Verifique as credenciais e permissões.'}`);
+                    alert(`Erro ao gerar o arquivo: ${errorData.message || 'Verifique o backend.'}`);
                 }
             } catch (error) {
                 alert(`Erro de rede: ${error.message}`);
