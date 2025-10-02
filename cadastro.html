@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro Lista de Convidados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'sonho-gold': '#D4AF37',
+                        'sonho-dark': '#1C1C1C',
+                        'sonho-light': '#F8F4F2',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    </style>
+</head>
+<body class="bg-sonho-light text-gray-900 font-sans p-4 sm:p-8">
+    <div class="max-w-xl mx-auto">
+        <div class="text-center mb-8">
+            <img src="https://i.imgur.com/G5gT1lY.jpg" alt="" class="mx-auto h-32">
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-8 text-sonho-gold">Cadastro Lista de Convidados</h1>
+
+        <!-- Form para informações da festa -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Detalhes da Festa</h2>
+            <div class="space-y-4">
+                <input type="text" id="name-input" placeholder="Nome do Aniversariante" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                <input type="number" id="age-input" placeholder="Idade" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                <input type="date" id="date-input" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                <select id="guest-count-select" class="w-full p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                    <option value="" disabled selected>Número de Convidados Contratados</option>
+                    <option value="40">40</option>
+                    <option value="60">60</option>
+                    <option value="80">80</option>
+                    <option value="100">100</option>
+                    <option value="120">120</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Form para lista de convidados -->
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Adicionar Convidados</h2>
+            <div class="flex flex-col gap-4 mb-4">
+                <input type="text" id="guest-name-input" placeholder="Nome do Convidado" class="flex-grow p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                <select id="guest-type-select" class="p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                    <option value="adulto">Adulto</option>
+                    <option value="crianca">Criança (até 10 anos)</option>
+                </select>
+            </div>
+            <button id="add-guest-btn" class="bg-sonho-gold hover:bg-yellow-600 text-sonho-dark font-bold py-3 px-6 rounded-lg transition-colors shadow-lg w-full mt-4">
+                Adicionar
+            </button>
+            <div id="guest-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div id="validation-message" class="text-center text-red-500 font-bold mb-4"></div>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button id="share-txt-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg w-full sm:w-auto">
+                Compartilhar
+            </button>
+            <input type="file" id="load-txt-input" accept=".txt" class="hidden">
+            <button id="load-txt-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg w-full sm:w-auto">
+                Carregar Ficheiro TXT
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        let guests = [];
+        let partyInfo = {};
+
+        const nameInput = document.getElementById('name-input');
+        const ageInput = document.getElementById('age-input');
+        const dateInput = document.getElementById('date-input');
+        const guestCountSelect = document.getElementById('guest-count-select');
+        const guestNameInput = document.getElementById('guest-name-input');
+        const guestTypeSelect = document.getElementById('guest-type-select');
+        const addGuestBtn = document.getElementById('add-guest-btn');
+        const guestListContainer = document.getElementById('guest-list');
+        const shareTxtBtn = document.getElementById('share-txt-btn');
+        const loadTxtBtn = document.getElementById('load-txt-btn');
+        const loadTxtInput = document.getElementById('load-txt-input');
+        const validationMessage = document.getElementById('validation-message');
+
+        function addGuest() {
+            const guestName = guestNameInput.value.trim();
+            const guestType = guestTypeSelect.value;
+            if (guestName) {
+                const newGuest = { name: guestName, type: guestType, isPresent: false };
+                guests.push(newGuest);
+                guestNameInput.value = '';
+                renderGuestList();
+            }
+        }
+
+        function createGuestItem(guest) {
+            const guestItem = document.createElement('div');
+            guestItem.classList.add('flex', 'items-center', 'justify-between', 'p-3', 'rounded-lg', 'bg-gray-200');
+
+            const nameTypeDiv = document.createElement('div');
+            nameTypeDiv.classList.add('flex', 'items-center', 'space-x-2');
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = guest.name;
+            nameSpan.classList.add('text-lg', 'font-medium');
+            const typeSpan = document.createElement('span');
+            typeSpan.classList.add('text-sm', 'text-gray-500');
+            typeSpan.textContent = `(${guest.type === 'adulto' ? 'Adulto' : 'Criança (até 10 anos)'})`;
+            nameTypeDiv.appendChild(nameSpan);
+            nameTypeDiv.appendChild(typeSpan);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('text-red-500', 'hover:text-red-700', 'font-bold', 'transition-colors');
+            removeBtn.textContent = 'Remover';
+            removeBtn.addEventListener('click', () => {
+                guests = guests.filter(g => g.name !== guest.name);
+                renderGuestList();
+            });
+
+            guestItem.appendChild(nameTypeDiv);
+            guestItem.appendChild(removeBtn);
+            return guestItem;
+        }
+
+        function renderGuestList() {
+            guestListContainer.innerHTML = '';
+            const sortedGuests = [...guests].sort((a, b) => a.name.localeCompare(b.name));
+            sortedGuests.forEach(guest => {
+                const guestItem = createGuestItem(guest);
+                guestListContainer.appendChild(guestItem);
+            });
+        }
+
+        function loadDataFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.partyInfo && data.guests) {
+                        partyInfo = data.partyInfo;
+                        guests = data.guests;
+                        nameInput.value = partyInfo.name || '';
+                        ageInput.value = partyInfo.age || '';
+                        dateInput.value = partyInfo.date || '';
+                        guestCountSelect.value = partyInfo.guestCount || '';
+                        renderGuestList();
+                    } else {
+                        alert('Ficheiro inválido. Por favor, selecione um ficheiro de dados da festa.');
+                    }
+                } catch (error) {
+                    alert('Erro ao carregar o ficheiro. Certifique-se de que é um ficheiro de texto válido.');
+                    console.error("Erro ao carregar o ficheiro:", error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function shareToWhatsapp() {
+            const partyName = nameInput.value.trim();
+            const partyAge = ageInput.value.trim();
+            const partyDate = dateInput.value.trim();
+            const partyGuestCount = guestCountSelect.value.trim();
+
+            if (!partyName || !partyAge || !partyDate || !partyGuestCount) {
+                validationMessage.textContent = "Por favor, preencha todos os campos de detalhes da festa antes de compartilhar.";
+                return;
+            }
+
+            validationMessage.textContent = "";
+
+            const data = {
+                partyInfo: {
+                    name: partyName,
+                    age: partyAge,
+                    date: partyDate,
+                    guestCount: partyGuestCount
+                },
+                guests: guests
+            };
+            const jsonString = JSON.stringify(data, null, 2);
+            
+            const filename = `lista_convidados_${partyName || 'festa'}.txt`.replace(/ /g, '_');
+            const blob = new Blob([jsonString], { type: 'text/plain' });
+            
+            if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename)] })) {
+                navigator.share({
+                    files: [new File([blob], filename)],
+                    title: `Lista de Convidados - ${partyName}`,
+                    text: `Olá! Segue em anexo a lista de convidados para a festa de ${partyName}.`
+                }).then(() => {
+                    console.log('Conteúdo partilhado com sucesso.');
+                }).catch((error) => {
+                    console.error('Erro na partilha:', error);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            } else {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        addGuestBtn.addEventListener('click', addGuest);
+        guestNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addGuest();
+            }
+        });
+        shareTxtBtn.addEventListener('click', shareToWhatsapp);
+        loadTxtBtn.addEventListener('click', () => loadTxtInput.click());
+        loadTxtInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                loadDataFromFile(file);
+            }
+        });
+    </script>
+</body>
+</html>
