@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle da Festa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="styles.css"> <!-- Link para o CSS separado -->
+    <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script> <!-- Para IndexedDB -->
+    <script src="script.js" defer></script> <!-- Link para o JS separado, com defer para carregar após o HTML -->
+</head>
+<body class="bg-sonho-light text-gray-900 font-sans p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <img src="https://i.imgur.com/G5gT1lY.jpg" alt="Logo Espaço Sonho Dourado" class="mx-auto h-32">
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-8 text-sonho-gold">Controle da Festa</h1>
+        
+        <div class="text-center mb-4">
+            <input type="file" id="load-txt-input-control" accept=".txt" class="hidden">
+            <button id="load-txt-btn-control" class="inline-block w-full sm:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg">
+                Carregar Ficheiro TXT
+            </button>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Informações da Festa</h2>
+            <div id="party-info" class="text-gray-700">
+                <p>Carregue um ficheiro TXT para ver as informações da festa.</p>
+            </div>
+            <a href="cadastro.html" class="mt-4 inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
+                Ir para Cadastro
+            </a>
+        </div>
+        
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Lista de Convidados</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-sonho-gold text-center">Adultos</h3>
+                    <div id="adult-guest-list" class="space-y-2"></div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-sonho-gold text-center">Crianças</h3>
+                    <div id="child-guest-list" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Adicionar Fora da Lista</h2>
+            <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                <input type="text" id="out-of-list-name" placeholder="Nome do Convidado" class="flex-grow p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                <select id="out-of-list-type" class="p-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-sonho-gold transition-colors">
+                    <option value="adulto">Adulto</option>
+                    <option value="crianca">Criança (até 10 anos)</option>
+                </select>
+                <button id="add-out-of-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg">
+                    Adicionar
+                </button>
+            </div>
+            <div id="out-of-list-container" class="space-y-2">
+                <h3 class="text-lg font-semibold mb-2 text-sonho-gold">Convidados Excedentes</h3>
+                <div id="out-of-list-guest-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+            <h2 class="text-xl font-semibold mb-4 text-sonho-gold">Estatísticas da Festa</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                <div class="bg-gray-200 p-4 rounded-xl">
+                    <div class="text-3xl font-bold text-sonho-gold" id="total-contracted">0</div>
+                    <p class="text-sm text-gray-600">Convidados Contratados</p>
+                </div>
+                <div class="bg-gray-200 p-4 rounded-xl">
+                    <div class="text-3xl font-bold text-sonho-gold" id="total-guests">0</div>
+                    <p class="text-sm text-gray-600">Total na Lista</p>
+                </div>
+                <div class="bg-gray-200 p-4 rounded-xl">
+                    <div class="text-3xl font-bold text-green-500" id="present-guests">0</div>
+                    <p class="text-sm text-gray-600">Presentes</p>
+                </div>
+                <div class="bg-gray-200 p-4 rounded-xl">
+                    <div class="text-3xl font-bold text-sonho-gold" id="present-adults">0</div>
+                    <p class="text-sm text-gray-600">Adultos Presentes</p>
+                </div>
+                <div class="bg-gray-200 p-4 rounded-xl">
+                    <div class="text-3xl font-bold text-sonho-gold" id="present-minors">0</div>
+                    <p class="text-sm text-gray-600">Crianças Presentes</p>
+                </div>
+                <div class="bg-gray-200 p-4 rounded-xl">
+                    <div class="text-3xl font-bold text-red-500" id="total-excedents">0</div>
+                    <p class="text-sm text-gray-600">Excedentes</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center flex flex-col sm:flex-row gap-4 justify-center">
+            <button id="report-pdf-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg w-full sm:w-auto">
+                Gerar Relatório da Festa
+            </button>
+            <button id="print-pdf-btn" class="bg-sonho-gold hover:bg-yellow-600 text-sonho-dark font-bold py-3 px-6 rounded-lg transition-colors shadow-lg w-full sm:w-auto">
+                Gerar Lista para Impressão
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
